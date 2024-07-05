@@ -56,14 +56,14 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << '\n';
 	}
 
-	ID = glCreateProgram();
-	glAttachShader(ID, vertex);
-	glAttachShader(ID, fragment);
-	glLinkProgram(ID);
-	glGetProgramiv(ID, GL_LINK_STATUS, &success);
+	m_ID = glCreateProgram();
+	glAttachShader(m_ID, vertex);
+	glAttachShader(m_ID, fragment);
+	glLinkProgram(m_ID);
+	glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
 	if (!success)
 	{
-		glGetProgramInfoLog(ID, 512, NULL, infoLog);
+		glGetProgramInfoLog(m_ID, 512, NULL, infoLog);
 		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << '\n';
 	}
 	glDeleteShader(vertex);
@@ -72,12 +72,12 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 
 void Shader::use()
 {
-	glUseProgram(ID);
+	glUseProgram(m_ID);
 }
 
 void Shader::setUniform(const std::string& name, bool value1)
 {
-	int uniformLocation = glGetUniformLocation(ID, name.c_str());
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
 	if (uniformLocation == -1)
 	{
 		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
@@ -87,7 +87,7 @@ void Shader::setUniform(const std::string& name, bool value1)
 
 void Shader::setUniform(const std::string& name, int value1)
 {
-	int uniformLocation = glGetUniformLocation(ID, name.c_str());
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
 	if (uniformLocation == -1)
 	{
 		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
@@ -97,7 +97,7 @@ void Shader::setUniform(const std::string& name, int value1)
 
 void Shader::setUniform(const std::string& name, float value1)
 {
-	int uniformLocation = glGetUniformLocation(ID, name.c_str());
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
 	if (uniformLocation == -1)
 	{
 		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
@@ -107,7 +107,7 @@ void Shader::setUniform(const std::string& name, float value1)
 
 void Shader::setUniform(const std::string& name, float value1, float value2)
 {
-	int uniformLocation = glGetUniformLocation(ID, name.c_str());
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
 	if (uniformLocation == -1)
 	{
 		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
@@ -117,7 +117,7 @@ void Shader::setUniform(const std::string& name, float value1, float value2)
 
 void Shader::setUniform(const std::string& name, float value1, float value2, float value3)
 {
-	int uniformLocation = glGetUniformLocation(ID, name.c_str());
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
 	if (uniformLocation == -1)
 	{
 		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';

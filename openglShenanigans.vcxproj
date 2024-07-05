@@ -143,13 +143,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Fragment\fragment3.frag" />
     <None Include="Shaders\Fragment\fragment1.frag" />
     <None Include="Shaders\Fragment\fragment2.frag" />
+    <None Include="Shaders\Fragment\fragmentBasic.frag" />
+    <None Include="Shaders\Fragment\textured.frag" />
+    <None Include="Shaders\Vertex\textured.vert" />
     <None Include="Shaders\Vertex\vertex1.vert" />
     <None Include="Shaders\Vertex\vertex2.vert" />
+    <None Include="Shaders\Vertex\vertexBasic.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Textures\brickWall.jpg" />
+    <Image Include="Textures\knight.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

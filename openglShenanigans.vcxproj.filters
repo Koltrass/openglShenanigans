@@ -38,6 +38,9 @@
     <ClInclude Include="Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Fragment\fragment1.frag">
@@ -52,6 +55,20 @@
     <None Include="Shaders\Fragment\fragment3.frag">
       <Filter>Resource Files\Shaders\Fragment</Filter>
     </None>
-    <None Include="Shaders\Vertex\vertex2.vert" />
+    <None Include="Shaders\Vertex\vertex2.vert">
+      <Filter>Resource Files\Shaders\Vertex</Filter>
+    </None>
+    <None Include="Shaders\Vertex\vertexBasic.vert" />
+    <None Include="Shaders\Fragment\fragmentBasic.frag" />
+    <None Include="Shaders\Vertex\textured.vert" />
+    <None Include="Shaders\Fragment\textured.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Textures\knight.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Textures\brickWall.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

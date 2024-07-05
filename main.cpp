@@ -3,7 +3,13 @@
 
 #include <iostream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include "Shader.h"
+
+
+float mixVal = 0.5f;
 void framebuffer_size_callback(GLFWwindow*, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -14,22 +20,38 @@ void processInput(GLFWwindow* window)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		mixVal += 0.001;
+		if (mixVal > 1.0f)
+			mixVal = 1.0f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		mixVal -= 0.001;
+		if (mixVal < 0.0f)
+			mixVal = 0.0f;
+	}
 }
+
 int main()
 {
 	int width = 800;
 	int height = 600;
-	float triangle1[] = { -0.9f, -0.9f, 0.0f, 0.1f,
-						  -0.9f,  0.4f, 0.0f, 0.4f,
-						  -0.2f, -0.9f, 0.0f, 0.8f};
-	float triangle2[] = {  0.9f,  0.9f, 0.0f,
-						   0.9f, -0.4f, 0.0f,
-						   0.2f,  0.9f, 0.0f };
-	float triangle3[] = {  0.0f,  0.9f, 0.0f,
-					      -0.5f, -0.4f, 0.0f,
-					       0.5f,  0.0f, 0.0f };
-	unsigned int indices[] = { 0, 1, 2, 3, 4, 5 };
-
+	float triangle1[] = { -0.9f, -0.9f,  0.0f,   0.1f,
+						  -0.9f,  0.4f,  0.0f,   0.4f,
+						  -0.2f, -0.9f,  0.0f,   0.8f };
+	float triangle2[] = {  0.9f,  0.9f,  0.0f,
+						   0.9f, -0.4f,  0.0f,
+						   0.2f,  0.9f,  0.0f };
+	float triangle3[] = {  0.0f,  0.0f,  0.0f,
+					       0.0f,  0.2f,  0.0f,
+					       0.2f,  0.0f,  0.0f };
+	float triangle4[] = { -1.0f,  0.0f,  0.0f,   1.0f, 0.0f, 0.0f,   0.45f, 0.55f,
+						  -1.0f, -1.0f,  0.0f,   0.0f, 1.0f, 0.0f,   0.45f, 0.45f,
+						   0.0f, -1.0f,  0.0f,   0.0f, 0.0f, 1.0f,   0.55f, 0.45f,
+						   0.0f,  0.0f,  0.0f,   1.0f, 1.0f, 0.0f,   0.55f, 0.55f };
+	unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
 	glfwInit();
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -97,9 +119,80 @@ int main()
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	unsigned int VAO4;
+	glGenVertexArrays(1, &VAO4);
+	glBindVertexArray(VAO4);
+
+	unsigned int VBO4;
+	glGenBuffers(1, &VBO4);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO4);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle4), triangle4, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*3));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*6));
+	glEnableVertexAttribArray(2);
+
+	unsigned int EBO4;
+	glGenBuffers(1, &EBO4);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO4);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
 	Shader shader1("Shaders/Vertex/vertex1.vert", "Shaders/Fragment/fragment1.frag");
 	Shader shader2("Shaders/Vertex/vertex1.vert", "Shaders/Fragment/fragment2.frag");
 	Shader shader3("Shaders/Vertex/vertex2.vert", "Shaders/Fragment/fragment3.frag");
+	Shader shader4("Shaders/Vertex/textured.vert", "Shaders/Fragment/textured.frag");
+
+	unsigned int texture1, texture2;
+	glGenTextures(1, &texture1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	int textureWidth, textureHeight, nOfChannels;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* data = stbi_load("Textures/brickWall.jpg", &textureWidth, &textureHeight, &nOfChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "ERROR::TEXTURE::FAILED_TO_LOAD\n";
+	}
+	stbi_image_free(data);
+
+	glGenTextures(1, &texture2);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	data = stbi_load("Textures/knight.jpg", &textureWidth, &textureHeight, &nOfChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "ERROR::TEXTURE::FAILED_TO_LOAD\n";
+	}
+	stbi_image_free(data);
+
+	shader4.use();
+	shader4.setUniform("myTexture1", 0);
+	shader4.setUniform("myTexture2", 1);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -124,6 +217,11 @@ int main()
 		glBindVertexArray(VAO3);
 		shader3.use();
 		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glBindVertexArray(VAO4);
+		shader4.use();
+		shader4.setUniform("mixVal", mixVal);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwPollEvents();
 		glfwSwapBuffers(window);

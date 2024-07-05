@@ -6,9 +6,9 @@
 #include <glad/glad.h>
 class Shader
 {
+private:
+	unsigned int m_ID;
 public:
-	unsigned int ID;
-
 	Shader(const char* vertexPath, const char* fragmentPath);
 
 	void use();
