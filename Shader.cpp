@@ -95,6 +95,16 @@ void Shader::setUniform(const std::string& name, int value1)
 	glUniform1i(uniformLocation, value1);
 }
 
+void Shader::setUniform(const std::string& name, int value1, int value2)
+{
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
+	if (uniformLocation == -1)
+	{
+		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
+	}
+	glUniform2i(uniformLocation, value1, value2);
+}
+
 void Shader::setUniform(const std::string& name, float value1)
 {
 	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
@@ -123,4 +133,43 @@ void Shader::setUniform(const std::string& name, float value1, float value2, flo
 		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
 	}
 	glUniform3f(uniformLocation, value1, value2, value3);
+}
+void Shader::setUniform(const std::string& name, double value1)
+{
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
+	if (uniformLocation == -1)
+	{
+		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
+	}
+	glUniform1d(uniformLocation, value1);
+}
+
+void Shader::setUniform(const std::string& name, double value1, double value2)
+{
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
+	if (uniformLocation == -1)
+	{
+		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
+	}
+	glUniform2d(uniformLocation, value1, value2);
+}
+
+void Shader::setUniform(const std::string& name, double value1, double value2, double value3)
+{
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
+	if (uniformLocation == -1)
+	{
+		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
+	}
+	glUniform3d(uniformLocation, value1, value2, value3);
+}
+
+void Shader::setUniform(const std::string& name, int amount, unsigned char transpose, const float* value)
+{
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
+	if (uniformLocation == -1)
+	{
+		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
+	}
+	glUniformMatrix4fv(uniformLocation, amount, transpose, value);
 }
