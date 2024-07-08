@@ -13,9 +13,18 @@
 #include "Shader.h"
 
 float mixVal = 0.5f;
+int width = 800;
+int height = 600;
+float camX;
+float camY;
+float camZ;
+float camAngleY = 0.0f;
+float camAngleX = 0.0f;
 void framebuffer_size_callback(GLFWwindow*, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	::width = width;
+	::height = height;
 }
 void processInput(GLFWwindow* window)
 {
@@ -35,17 +44,79 @@ void processInput(GLFWwindow* window)
 		if (mixVal < 0.0f)
 			mixVal = 0.0f;
 	}
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		camZ -= 0.01f *  cos(glm::radians(camAngleY));
+		camX += 0.01f * -sin(glm::radians(camAngleY));
+
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		camZ += 0.01f * cos(glm::radians(camAngleY));
+		camX -= 0.01f * -sin(glm::radians(camAngleY));
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		camX -= 0.01f * cos(glm::radians(camAngleY));
+		camZ += 0.01f * sin(glm::radians(camAngleY));
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		camX += 0.01f * cos(glm::radians(camAngleY));
+		camZ -= 0.01f * sin(glm::radians(camAngleY));
+	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		camY += 0.01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	{
+		camY -= 0.01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		camAngleY += 0.01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	{
+		camAngleY -= 0.01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		camAngleX += 0.01f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+	{
+		camAngleX -= 0.01f;
+	}
 }
 
 int main()
 {
-	int width = 800;
-	int height = 600;
 	float triangle4[] = { -0.5f,  0.5f,  0.0f,   1.0f, 0.0f, 0.0f,   0.0f,  1.0f,
 						  -0.5f, -0.5f,  0.0f,   0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-						   0.5f, -0.5f,  0.0f,   0.0f, 0.0f, 1.0f,   1.00f, 0.00f,
-						   0.5f,  0.5f,  0.0f,   1.0f, 1.0f, 0.0f,   1.00f, 1.0f };
-	unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
+						   0.5f, -0.5f,  0.0f,   0.0f, 0.0f, 1.0f,   1.00f, 0.0f,
+						   0.5f,  0.5f,  0.0f,   1.0f, 1.0f, 0.0f,   1.00f, 1.0f,
+						  -0.5f,  0.5f,  1.0f,   1.0f, 1.0f, 0.0f,   0.0f,  1.0f,
+						  -0.5f, -0.5f,  1.0f,   0.0f, 1.0f, 1.0f,   0.0f,  0.0f,
+						   0.5f, -0.5f,  1.0f,   1.0f, 0.0f, 1.0f,   1.00f, 0.0f,
+						   0.5f,  0.5f,  1.0f,   1.0f, 1.0f, 1.0f,   1.00f, 1.0f, };
+	unsigned int indices[] = { 0, 1, 2, 0, 2, 3, 1, 5, 2, 5, 2, 6, 5, 6, 7, 5, 4, 7, 0, 4, 3, 4, 3, 7, 2, 3, 7, 2, 6, 7, 0, 4, 5, 0, 1, 5 };
+
+	glm::vec3 cubePositions[] =
+	{
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(-1.3f,  1.0f, -1.5f),
+		glm::vec3( 0.0f,  0.0f,  0.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3( 2.4f, -0.4f, -3.5f),
+		glm::vec3( 2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3( 1.3f, -2.0f, -2.5f),
+		glm::vec3( 1.5f,  2.0f, -2.5f),
+		glm::vec3( 1.5f,  0.2f, -1.5f)
+	};
+
 	glfwInit();
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -141,6 +212,8 @@ int main()
 	shader4.setUniform("myTexture1", 0);
 	shader4.setUniform("myTexture2", 1);
 
+	glEnable(GL_DEPTH_TEST);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		processInput(window);
@@ -148,23 +221,50 @@ int main()
 
 		glClearColor(0.1f, 0.0f, 0.15f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glBindVertexArray(VAO4);
 		shader4.use();
 		shader4.setUniform("mixVal", mixVal);
-		glm::mat4 trans = glm::mat4(1.0f);
-		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
-		trans = glm::translate(trans, glm::vec3(0.5, -0.5, 0.0));
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.5f, -0.5f, 0.0f));
+		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
+		
+		glm::mat4 view = glm::mat4(1.0f);
+		view = glm::rotate(view, glm::radians(-camAngleX), glm::vec3(1.0f, 0.0f, 0.0f));
+		view = glm::rotate(view, glm::radians(-camAngleY) , glm::vec3(0.0f, 1.0f, 0.0f));//can't understand why order matters here
+		view = glm::translate(view, glm::vec3(-camX, -camY, -camZ));
 
-		shader4.setUniform("transformation", 1, GL_FALSE, glm::value_ptr(trans));
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glm::mat4 projection = glm::mat4(1.0f);
+		//projection = glm::ortho(-(float)width/height, (float)width/height, -1.0f, 1.0f, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
 
-		trans = glm::mat4(1.0f);
-		trans = glm::translate(trans, glm::vec3(-0.5, 0.5, 0.0));
-		trans = glm::scale(trans, glm::vec3(sin((float)glfwGetTime()), sin((float)glfwGetTime()), 1.0));
+		shader4.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+		shader4.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
+		shader4.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-		shader4.setUniform("transformation", 1, GL_FALSE, glm::value_ptr(trans));
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-0.5f, 0.5f, 0.0f));
+		model = glm::scale(model, glm::vec3(sin((float)glfwGetTime()), sin((float)glfwGetTime()), sin((float)glfwGetTime())));
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
+
+		shader4.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		for (int i = 0; i < std::size(cubePositions); i++)
+		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			float angle = 0;
+			if (i % 3 == 0)  // every 3rd iteration (including the first) we set the angle using GLFW's time function.
+				angle = glfwGetTime() * 25.0f;
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			shader4.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+			model = glm::scale(model, glm::vec3(sin((float)glfwGetTime()), sin((float)glfwGetTime()), sin((float)glfwGetTime())));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		}
 
 
 
