@@ -11,20 +11,43 @@
 #include "stb_image.h"
 
 #include "Shader.h"
+#include "Camera.h"
 
 float mixVal = 0.5f;
 int width = 800;
 int height = 600;
-float camX;
-float camY;
-float camZ;
-float camAngleY = 0.0f;
-float camAngleX = 0.0f;
-void framebuffer_size_callback(GLFWwindow*, int width, int height)
+
+Camera camera(0.0f, 0.0f, 3.0f, 0.0f, 1.0f, 0.0f, -90.0f, 0.0f);
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+float lastX = width/ 2.0f;
+float lastY = height / 2.0f;
+bool firstMouse = true;
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 	::width = width;
 	::height = height;
+}
+void mouse_callback(GLFWwindow* window, double xPos, double yPos)
+{
+	if (firstMouse == true)
+	{
+		lastX = xPos;
+		lastY = yPos;
+		firstMouse = false;
+	}
+	float xOffset = (float)xPos - lastX;
+	float yOffset = lastY - (float)yPos;
+	lastX = xPos;
+	lastY = yPos;
+	camera.processMouseMovement(xOffset, yOffset, true);
+}
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
+{
+	camera.processMouseScroll(yOffset);
 }
 void processInput(GLFWwindow* window)
 {
@@ -46,48 +69,28 @@ void processInput(GLFWwindow* window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		camZ -= 0.01f *  cos(glm::radians(camAngleY));
-		camX += 0.01f * -sin(glm::radians(camAngleY));
 
+		camera.processKeyboard(FORWARD, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		camZ += 0.01f * cos(glm::radians(camAngleY));
-		camX -= 0.01f * -sin(glm::radians(camAngleY));
+		camera.processKeyboard(BACKWARD, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		camX -= 0.01f * cos(glm::radians(camAngleY));
-		camZ += 0.01f * sin(glm::radians(camAngleY));
+		camera.processKeyboard(LEFT, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		camX += 0.01f * cos(glm::radians(camAngleY));
-		camZ -= 0.01f * sin(glm::radians(camAngleY));
+		camera.processKeyboard(RIGHT, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
-		camY += 0.01f;
+		camera.processKeyboard(UP, deltaTime);
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{
-		camY -= 0.01f;
-	}
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-	{
-		camAngleY += 0.01f;
-	}
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-	{
-		camAngleY -= 0.01f;
-	}
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-	{
-		camAngleX += 0.01f;
-	}
-	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-	{
-		camAngleX -= 0.01f;
+		camera.processKeyboard(DOWN, deltaTime);
 	}
 }
 
@@ -139,6 +142,10 @@ int main()
 	glViewport(0, 0, width, height);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	unsigned int VAO4;
 	glGenVertexArrays(1, &VAO4);
@@ -216,6 +223,10 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
+		float currentFrame = static_cast<float>(glfwGetTime());
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
 		processInput(window);
 
 
@@ -232,13 +243,11 @@ int main()
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
 		
 		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::rotate(view, glm::radians(-camAngleX), glm::vec3(1.0f, 0.0f, 0.0f));
-		view = glm::rotate(view, glm::radians(-camAngleY) , glm::vec3(0.0f, 1.0f, 0.0f));//can't understand why order matters here
-		view = glm::translate(view, glm::vec3(-camX, -camY, -camZ));
+		view = camera.getViewMatrix();
 
 		glm::mat4 projection = glm::mat4(1.0f);
 		//projection = glm::ortho(-(float)width/height, (float)width/height, -1.0f, 1.0f, 0.1f, 100.0f);
-		projection = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(camera.getZoom()), width / (float)height, 0.1f, 100.0f);
 
 		shader4.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 		shader4.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
