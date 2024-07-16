@@ -1,8 +1,8 @@
 #version 330 core
 struct Material
 {
-	vec3 ambient;
-	vec3 diffuse;
+	sampler2D diffuse;
+
 	vec3 specular;
 	float shininess;
 };
@@ -17,6 +17,7 @@ struct LightSource
 
 in vec3 normal;
 in vec3 worldPos;
+in vec2 texCoords;
 
 uniform vec3 viewPos;
 uniform Material material;
@@ -26,12 +27,12 @@ out vec4 finalColor;
 
 void main()
 {
-	vec3 ambient = material.ambient * lightSource.ambient;
+	vec3 ambient = lightSource.ambient * vec3(texture(material.diffuse, texCoords));
 
 	vec3 norm = normalize(normal);
 	vec3 objectToLight = normalize(lightSource.position - worldPos);
 	float diffuseCoef = max(dot(norm, objectToLight), 0.0);
-	vec3 diffuse = diffuseCoef * material.diffuse * lightSource.diffuse;
+	vec3 diffuse = diffuseCoef * vec3(texture(material.diffuse, texCoords)) * lightSource.diffuse;
 
 	vec3 viewDir = normalize(viewPos - worldPos);
 	vec3 reflectDir = reflect(-objectToLight, norm);
