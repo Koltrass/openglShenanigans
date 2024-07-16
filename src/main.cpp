@@ -96,23 +96,19 @@ int main()
 		-0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f
 	};
-	Material copperLike = { {0.5f, 0.5f, 0.5f}, 128.0f };
-	Material dunno =      { {0.5f, 0.5f, 0.5f}, 16.0f };
-	Material whiteShiny = { {0.5f, 0.5f, 0.5f}, 2048.0f };
-	Material blackMatte = { {0.1f, 0.1f, 0.1f}, 1.0f };
 	Cube cubes[] =
 	{
-		{ { -2.0f,  5.0f, 0.0f }, 1.0f, copperLike },
-		{ { -2.0f,  3.0f, 0.0f }, 1.0f, dunno },
-		{ { -2.0f,  1.0f, 0.0f }, 1.0f, copperLike },
-		{ {  0.0f,  3.0f, 0.0f }, 1.0f, dunno },
-		{ {  0.0f,  1.0f, 0.0f }, 1.0f, copperLike },
-		{ {  2.0f,  5.0f, 0.0f }, 1.0f, dunno },
-		{ {  0.0f,  5.0f, 0.0f }, 1.0f, copperLike },
-		{ {  2.0f,  3.0f, 0.0f }, 1.0f, dunno },
-		{ {  2.0f,  1.0f, 0.0f }, 1.0f, copperLike },
-		{ {  10.0f, 5.0f, 0.0f }, 8.0f, whiteShiny },
-		{ {  0.0f,  -50.0, 0.0f }, 100.0f, blackMatte}
+		{ { -2.0f,  5.0f, 0.0f }, 1.0f, 2048.0f},
+		{ { -2.0f,  3.0f, 0.0f }, 1.0f, 2048.0f },
+		{ { -2.0f,  1.0f, 0.0f }, 1.0f, 2048.0f },
+		{ {  0.0f,  3.0f, 0.0f }, 1.0f, 2048.0f },
+		{ {  0.0f,  1.0f, 0.0f }, 1.0f, 2048.0f },
+		{ {  2.0f,  5.0f, 0.0f }, 1.0f, 2048.0f },
+		{ {  0.0f,  5.0f, 0.0f }, 1.0f, 2048.0f },
+		{ {  2.0f,  3.0f, 0.0f }, 1.0f, 2048.0f },
+		{ {  2.0f,  1.0f, 0.0f }, 1.0f, 2048.0f },
+		{ {  10.0f, 5.0f, 0.0f }, 8.0f, 2048.0f },
+		{ {  0.0f,  -50.0, 0.0f }, 100.0f, 2048.0f}
 	};
 
 	glfwInit();
@@ -174,14 +170,14 @@ int main()
 	glEnableVertexAttribArray(2);
 
 
-	unsigned int texture;
+	unsigned int texture0;
 	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glGenTextures(1, &texture0);
+	glBindTexture(GL_TEXTURE_2D, texture0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	stbi_set_flip_vertically_on_load(true);
 	int texWidth, texHeight, nChannels;
@@ -197,10 +193,30 @@ int main()
 	}
 	stbi_image_free(data);
 
+	unsigned int texture1;
+	glActiveTexture(GL_TEXTURE1);
+	glGenTextures(1, &texture1);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	data = stbi_load("Textures/container2_specular.png", &texWidth, &texHeight, &nChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture\n";
+	}
+	stbi_image_free(data);
+
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, texture);
 
 	Shader shaderCube("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/lightingPracticeObject.frag");
 	Shader shaderLightSource("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/lightingPracticeSource.frag");
@@ -249,8 +265,8 @@ int main()
 			shaderCube.setUniform("lightSource.specular", lightColor);
 
 			shaderCube.setUniform("material.diffuse", 0);
-			shaderCube.setUniform("material.specular", cubes[i].material.specular);
-			shaderCube.setUniform("material.shininess", cubes[i].material.shininess);
+			shaderCube.setUniform("material.specular", 1);
+			shaderCube.setUniform("material.shininess", cubes[i].shininess);
 			//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
