@@ -54,6 +54,10 @@ void Camera::processMouseMovement(float xOffset, float yOffset, bool constrainPi
 {
 	m_yaw += xOffset * m_mouseSensitivity;
 	m_pitch += yOffset * m_mouseSensitivity;
+	if (m_pitch > 89.9f)
+		m_pitch = 89.9f;
+	else if (m_pitch < -89.9f)
+		m_pitch = -89.9f;
 	updateCameraVectors();
 }
 void Camera::processMouseScroll(float yOffset)
