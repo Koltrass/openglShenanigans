@@ -4,7 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-enum direction {
+enum direction
+{
 	FORWARD,
 	BACKWARD,
 	RIGHT,
@@ -24,9 +25,9 @@ private:
 	float m_yaw;
 	float m_pitch;
 
-	float m_movementSpeed = 2.0f;
-	float m_mouseSensitivity = 0.15f;
-	float m_zoom = 45.0f;
+	float m_movementSpeed;
+	float m_mouseSensitivity;
+	float m_zoom;
 public:
 	Camera(glm::vec3 pos, glm::vec3 up, float yaw, float pitch);
 	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
@@ -38,6 +39,7 @@ public:
 
 	glm::mat4 getViewMatrix();
 	float getZoom();
+	glm::vec3 getPosition();
 private:
 	void updateCameraVectors();
 };

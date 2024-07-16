@@ -5,24 +5,13 @@ Camera::Camera(glm::vec3 pos, glm::vec3 up, float yaw, float pitch)
 	m_worldUp = up;
 	m_yaw = yaw;
 	m_pitch = pitch;
+	m_movementSpeed = 4.0f;
+	m_mouseSensitivity = 0.15f;
+	m_zoom = 45.0f;
 	updateCameraVectors();
 }
-Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
-{
-	m_pos = glm::vec3(posX, posY, posZ);
-	m_worldUp = glm::vec3(upX, upY, upZ);
-	m_yaw = yaw;
-	m_pitch = pitch;
-	updateCameraVectors();
-}
-Camera::Camera() 
-{
-	m_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-	m_worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-	m_yaw = 0.0;
-	m_pitch = 0.0;
-	updateCameraVectors();
-}
+Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Camera(glm::vec3(posX, posY, posZ), glm::vec3(upX, upY, upZ), yaw, pitch) {}
+Camera::Camera() : Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f) {}
 
 void Camera::processKeyboard(direction direction, float deltaTime)
 {
@@ -82,6 +71,10 @@ glm::mat4 Camera::getViewMatrix()
 float Camera::getZoom()
 {
 	return m_zoom;
+}
+glm::vec3 Camera::getPosition()
+{
+	return m_pos;
 }
 void Camera::updateCameraVectors()
 {

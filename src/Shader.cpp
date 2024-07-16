@@ -134,6 +134,24 @@ void Shader::setUniform(const std::string& name, float value1, float value2, flo
 	}
 	glUniform3f(uniformLocation, value1, value2, value3);
 }
+void Shader::setUniform(const std::string& name, float value1, float value2, float value3, float value4)
+{
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
+	if (uniformLocation == -1)
+	{
+		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
+	}
+	glUniform4f(uniformLocation, value1, value2, value3, value4);
+}
+void Shader::setUniform(const std::string& name, glm::vec3 vector)
+{
+	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());
+	if (uniformLocation == -1)
+	{
+		std::cout << "ERROR:SHADER::PROGRAM::UNIFORM_NOT_FOUND\n" << name << '\n';
+	}
+	glUniform3f(uniformLocation, vector.x, vector.y, vector.z);
+}
 void Shader::setUniform(const std::string& name, double value1)
 {
 	int uniformLocation = glGetUniformLocation(m_ID, name.c_str());

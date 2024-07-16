@@ -12,19 +12,245 @@
 
 #include "Shader.h"
 #include "Camera.h"
+#include "Cube.h"
+
+#define FULLSCREEN 1
 
 float mixVal = 0.5f;
+
+#if FULLSCREEN == 1
+int width = 1920;
+int height = 1080;
+#else
 int width = 800;
 int height = 600;
+#endif
 
-Camera camera(0.0f, 0.0f, 3.0f, 0.0f, 1.0f, 0.0f, -90.0f, 0.0f);
+Camera camera(0.0f, 5.0f, 3.0f, 0.0f, 1.0f, 0.0f, -90.0f, 0.0f);
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-float lastX = width/ 2.0f;
+float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 bool firstMouse = true;
 
+glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+glm::vec3 lightPos = glm::vec3(0.0f, 9.0f, -3.0f);
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xPos, double yPos);
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
+void processInput(GLFWwindow* window);
+
+int main()
+{
+	float cube1[] =
+	{
+		-0.5f,  0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
+		 0.5f, -0.5f, -0.5f,
+		 0.5f,  0.5f, -0.5f,
+		-0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,
+		 0.5f, -0.5f,  0.5f,
+		 0.5f,  0.5f,  0.5f
+	};
+	unsigned int indices[] = { 0, 1, 2, 0, 2, 3, 1, 5, 2, 5, 2, 6, 5, 6, 7, 5, 4, 7, 0, 4, 3, 4, 3, 7, 2, 3, 7, 2, 6, 7, 0, 4, 5, 0, 1, 5 };
+
+	float vertices[] = {
+		// positions            // normals            // texture coords
+		-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f
+	};
+	Material copperLike = { {1.0f, 0.5f, 0.31f}, {1.0f, 0.5f, 0.31f}, {0.5f, 0.5f, 0.5f}, 128.0f };
+	Material dunno = { {0.5f, 1.0f, 0.31f}, {0.5f, 1.0f, 0.31f}, {0.5f, 0.5f, 0.5f}, 16.0f };
+	Material whiteShiny = { {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.5f, 0.5f, 0.5f}, 2048.0f };
+	Material blackMatte = { {0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f}, 1.0f };
+	Cube cubes[] =
+	{
+		{ { -2.0f,  5.0f, 0.0f }, 1.0f, copperLike },
+		{ { -2.0f,  3.0f, 0.0f }, 1.0f, dunno },
+		{ { -2.0f,  1.0f, 0.0f }, 1.0f, copperLike },
+		{ {  0.0f,  5.0f, 0.0f }, 1.0f, dunno },
+		{ {  0.0f,  3.0f, 0.0f }, 1.0f, copperLike },
+		{ {  0.0f,  1.0f, 0.0f }, 1.0f, dunno },
+		{ {  2.0f,  5.0f, 0.0f }, 1.0f, copperLike },
+		{ {  2.0f,  3.0f, 0.0f }, 1.0f, dunno },
+		{ {  2.0f,  1.0f, 0.0f }, 1.0f, copperLike },
+		{ {  10.0f, 5.0f, 0.0f }, 8.0f, whiteShiny },
+		{ {  0.0f,  -50.0, 0.0f }, 100.0f, blackMatte}
+	};
+
+	glfwInit();
+
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#if FULLSCREEN == 1
+	GLFWwindow* window = glfwCreateWindow(width, height, "Small window", glfwGetPrimaryMonitor(), NULL);
+#else
+	GLFWwindow* window = glfwCreateWindow(width, height, "Small window", NULL, NULL);
+#endif
+	if (window == NULL)
+	{
+		std::cout << "Failed to create a window\n";
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD\n";
+		return -1;
+	}
+	glViewport(0, 0, width, height);
+
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	unsigned int VAO1;
+	glGenVertexArrays(1, &VAO1);
+	glBindVertexArray(VAO1);
+
+	/*unsigned int VBO1;
+	glGenBuffers(1, &VBO1);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube1), cube1, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);*/
+
+	/*unsigned int EBO1;
+	glGenBuffers(1, &EBO1);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO1);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
+
+	unsigned int VBO1;
+	glGenBuffers(1, &VBO1);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(1);
+	/*glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)6);
+	glEnableVertexAttribArray(2);*/
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	Shader shaderCube("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/lightingPracticeObject.frag");
+	Shader shaderLightSource("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/lightingPracticeSource.frag");
+
+	glEnable(GL_DEPTH_TEST);
+
+	while (!glfwWindowShouldClose(window))
+	{
+		float currentFrame = static_cast<float>(glfwGetTime());
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		processInput(window);
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glBindVertexArray(VAO1);
+
+		glm::mat4 view = glm::mat4(1.0f);
+		view = camera.getViewMatrix();
+
+		glm::mat4 projection = glm::mat4(1.0f);
+		//projection = glm::ortho(-(float)width/height, (float)width/height, -1.0f, 1.0f, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(camera.getZoom()), width / (float)height, 0.1f, 100.0f);
+
+		shaderCube.use();
+
+		shaderCube.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
+		shaderCube.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+		shaderCube.setUniform("lightSource.position", lightPos);
+		shaderCube.setUniform("viewPos", camera.getPosition());
+
+		for (size_t i = 0; i < sizeof(cubes) / sizeof(Cube); i++)
+		{
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubes[i].location);
+			model = glm::scale(model, glm::vec3(cubes[i].scaling));
+
+			shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+
+			shaderCube.setUniform("lightSource.ambient", {0.1f, 0.1f, 0.1f});
+			shaderCube.setUniform("lightSource.diffuse", lightColor);
+			shaderCube.setUniform("lightSource.specular", lightColor);
+			shaderCube.setUniform("material.ambient", cubes[i].material.ambient);
+			shaderCube.setUniform("material.diffuse", cubes[i].material.diffuse);
+			shaderCube.setUniform("material.specular", cubes[i].material.specular);
+			shaderCube.setUniform("material.shininess", cubes[i].material.shininess);
+			//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		shaderLightSource.use();
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f));
+
+		shaderLightSource.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+		shaderLightSource.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
+		shaderLightSource.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+		shaderLightSource.setUniform("lightColor", lightColor);
+
+		//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glfwPollEvents();
+		glfwSwapBuffers(window);
+	}
+	glfwTerminate();
+	return 0;
+}
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -67,219 +293,96 @@ void processInput(GLFWwindow* window)
 		if (mixVal < 0.0f)
 			mixVal = 0.0f;
 	}
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
 	{
-
-		camera.processKeyboard(FORWARD, deltaTime);
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		camera.processKeyboard(BACKWARD, deltaTime);
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		camera.processKeyboard(LEFT, deltaTime);
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		camera.processKeyboard(RIGHT, deltaTime);
-	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-	{
-		camera.processKeyboard(UP, deltaTime);
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-	{
-		camera.processKeyboard(DOWN, deltaTime);
-	}
-}
-
-int main()
-{
-	float triangle4[] = { -0.5f,  0.5f,  0.0f,   1.0f, 0.0f, 0.0f,   0.0f,  1.0f,
-						  -0.5f, -0.5f,  0.0f,   0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-						   0.5f, -0.5f,  0.0f,   0.0f, 0.0f, 1.0f,   1.00f, 0.0f,
-						   0.5f,  0.5f,  0.0f,   1.0f, 1.0f, 0.0f,   1.00f, 1.0f,
-						  -0.5f,  0.5f,  1.0f,   1.0f, 1.0f, 0.0f,   0.0f,  1.0f,
-						  -0.5f, -0.5f,  1.0f,   0.0f, 1.0f, 1.0f,   0.0f,  0.0f,
-						   0.5f, -0.5f,  1.0f,   1.0f, 0.0f, 1.0f,   1.00f, 0.0f,
-						   0.5f,  0.5f,  1.0f,   1.0f, 1.0f, 1.0f,   1.00f, 1.0f, };
-	unsigned int indices[] = { 0, 1, 2, 0, 2, 3, 1, 5, 2, 5, 2, 6, 5, 6, 7, 5, 4, 7, 0, 4, 3, 4, 3, 7, 2, 3, 7, 2, 6, 7, 0, 4, 5, 0, 1, 5 };
-
-	glm::vec3 cubePositions[] =
-	{
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(-1.3f,  1.0f, -1.5f),
-		glm::vec3( 0.0f,  0.0f,  0.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3( 2.4f, -0.4f, -3.5f),
-		glm::vec3( 2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3( 1.3f, -2.0f, -2.5f),
-		glm::vec3( 1.5f,  2.0f, -2.5f),
-		glm::vec3( 1.5f,  0.2f, -1.5f)
-	};
-
-	glfwInit();
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	GLFWwindow* window = glfwCreateWindow(width, height, "Small window", NULL, NULL);
-	if (window == NULL)
-	{
-		std::cout << "Failed to create a window\n";
-		glfwTerminate();
-		return -1;
-	}
-	glfwMakeContextCurrent(window);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialize GLAD\n";
-		return -1;
-	}
-	glViewport(0, 0, width, height);
-
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetScrollCallback(window, scroll_callback);
-
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	unsigned int VAO4;
-	glGenVertexArrays(1, &VAO4);
-	glBindVertexArray(VAO4);
-
-	unsigned int VBO4;
-	glGenBuffers(1, &VBO4);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO4);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle4), triangle4, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*3));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float)*6));
-	glEnableVertexAttribArray(2);
-
-	unsigned int EBO4;
-	glGenBuffers(1, &EBO4);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO4);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	Shader shader4("Shaders/Vertex/textured.vert", "Shaders/Fragment/textured.frag");
-
-	unsigned int texture1, texture2;
-	glGenTextures(1, &texture1);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture1);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	int textureWidth, textureHeight, nOfChannels;
-	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load("Textures/brickWall.jpg", &textureWidth, &textureHeight, &nOfChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "ERROR::TEXTURE::FAILED_TO_LOAD\n";
-	}
-	stbi_image_free(data);
-
-	glGenTextures(1, &texture2);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texture2);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	data = stbi_load("Textures/knight.jpg", &textureWidth, &textureHeight, &nOfChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "ERROR::TEXTURE::FAILED_TO_LOAD\n";
-	}
-	stbi_image_free(data);
-
-	shader4.use();
-	shader4.setUniform("myTexture1", 0);
-	shader4.setUniform("myTexture2", 1);
-
-	glEnable(GL_DEPTH_TEST);
-
-	while (!glfwWindowShouldClose(window))
-	{
-		float currentFrame = static_cast<float>(glfwGetTime());
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		processInput(window);
-
-
-		glClearColor(0.1f, 0.0f, 0.15f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		glBindVertexArray(VAO4);
-		shader4.use();
-		shader4.setUniform("mixVal", mixVal);
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.5f, -0.5f, 0.0f));
-		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
-		
-		glm::mat4 view = glm::mat4(1.0f);
-		view = camera.getViewMatrix();
-
-		glm::mat4 projection = glm::mat4(1.0f);
-		//projection = glm::ortho(-(float)width/height, (float)width/height, -1.0f, 1.0f, 0.1f, 100.0f);
-		projection = glm::perspective(glm::radians(camera.getZoom()), width / (float)height, 0.1f, 100.0f);
-
-		shader4.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
-		shader4.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
-		shader4.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-0.5f, 0.5f, 0.0f));
-		model = glm::scale(model, glm::vec3(sin((float)glfwGetTime()), sin((float)glfwGetTime()), sin((float)glfwGetTime())));
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
-
-		shader4.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-		for (int i = 0; i < std::size(cubePositions); i++)
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, cubePositions[i]);
-			float angle = 0;
-			if (i % 3 == 0)  // every 3rd iteration (including the first) we set the angle using GLFW's time function.
-				angle = glfwGetTime() * 25.0f;
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			shader4.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
-			model = glm::scale(model, glm::vec3(sin((float)glfwGetTime()), sin((float)glfwGetTime()), sin((float)glfwGetTime())));
-			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			lightPos.z -= deltaTime * 4.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			lightPos.z += deltaTime * 4.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			lightPos.x -= deltaTime * 4.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			lightPos.x += deltaTime * 4.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		{
+			lightPos.y += deltaTime * 4.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		{
+			lightPos.y -= deltaTime * 4.0f;
 		}
 
-
-
-		glfwPollEvents();
-		glfwSwapBuffers(window);
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+		{
+			lightColor.r += deltaTime * 1.0f;
+			if (lightColor.r > 1.0f)
+				lightColor.r = 1.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+		{
+			lightColor.r -= deltaTime * 1.0f;
+			if (lightColor.r < 0.0f)
+				lightColor.r = 0.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+		{
+			lightColor.g += deltaTime * 1.0f;
+			if (lightColor.g > 1.0f)
+				lightColor.g = 1.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+		{
+			lightColor.g -= deltaTime * 1.0f;
+			if (lightColor.g < 0.0f)
+				lightColor.g = 0.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+		{
+			lightColor.b += deltaTime * 1.0f;
+			if (lightColor.b > 1.0f)
+				lightColor.b = 1.0f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+		{
+			lightColor.b -= deltaTime * 1.0f;
+			if (lightColor.b < 0.0f)
+				lightColor.b = 0.0f;
+		}
+		return;
 	}
-	glfwTerminate();
-	return 0;
+	else
+	{
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			camera.processKeyboard(FORWARD, deltaTime);
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			camera.processKeyboard(BACKWARD, deltaTime);
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			camera.processKeyboard(LEFT, deltaTime);
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			camera.processKeyboard(RIGHT, deltaTime);
+		}
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		{
+			camera.processKeyboard(UP, deltaTime);
+		}
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		{
+			camera.processKeyboard(DOWN, deltaTime);
+		}
+	}
 }

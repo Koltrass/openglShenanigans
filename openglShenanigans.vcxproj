@@ -144,6 +144,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Cube.h" />
+    <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\stb_image.h" />
   </ItemGroup>
@@ -152,7 +154,10 @@
     <None Include="Shaders\Fragment\fragment1.frag" />
     <None Include="Shaders\Fragment\fragment2.frag" />
     <None Include="Shaders\Fragment\fragmentBasic.frag" />
+    <None Include="Shaders\Fragment\lightingPracticeObject.frag" />
+    <None Include="Shaders\Fragment\lightingPracticeSource.frag" />
     <None Include="Shaders\Fragment\textured.frag" />
+    <None Include="Shaders\Vertex\lightingPracticeObject.vert" />
     <None Include="Shaders\Vertex\textured.vert" />
     <None Include="Shaders\Vertex\vertex1.vert" />
     <None Include="Shaders\Vertex\vertex2.vert" />
