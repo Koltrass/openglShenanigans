@@ -40,6 +40,10 @@ glm::vec3 pointLightPosition = glm::vec3(0.0f, 9.0f, -3.0f);
 glm::vec3 directionLightColor = pointLightColor;
 glm::vec3 directionLightDirection = glm::vec3(0.0f, -1.0f, 0.2f);
 
+glm::vec3 spotlightPosition = glm::vec3(-5.75f, 5.75f, 0.0f);
+glm::vec3 spotlightDirection = glm::vec3(1.0f, -0.3f, 0.0f);
+float spotlightCutoff = 50.0f;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
@@ -217,6 +221,26 @@ int main()
 	}
 	stbi_image_free(data);
 
+	unsigned int texture2;
+	glActiveTexture(GL_TEXTURE2);
+	glGenTextures(1, &texture2);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	data = stbi_load("Textures/lampPost_diffuse.png", &texWidth, &texHeight, &nChannels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture\n";
+	}
+	stbi_image_free(data);
+
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -253,34 +277,57 @@ int main()
 		shaderCube.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
 		shaderCube.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
-		shaderCube.setUniform("lightSource.position",pointLightPosition);
 		shaderCube.setUniform("viewPos", camera.getPosition());
+
+		shaderCube.setUniform("lightSource.position", pointLightPosition);
+		shaderCube.setUniform("lightSource.ambient", { 0.1f, 0.1f, 0.1f });
+		shaderCube.setUniform("lightSource.diffuse", pointLightColor);
+		shaderCube.setUniform("lightSource.specular", pointLightColor);
+		shaderCube.setUniform("lightSource.constant", 1.0f);
+		shaderCube.setUniform("lightSource.linear", 0.09f);
+		shaderCube.setUniform("lightSource.quadratic", 0.032f);
+
+		shaderCube.setUniform("material.diffuse", 0);
+		shaderCube.setUniform("material.specular", 1);
 
 		for (size_t i = 0; i < sizeof(cubes) / sizeof(Cube); i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubes[i].location);
 			model = glm::scale(model, glm::vec3(cubes[i].scaling));
-
 			shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 
-			shaderCube.setUniform("lightSource.ambient", { 0.1f, 0.1f, 0.1f });
-			shaderCube.setUniform("lightSource.diffuse", pointLightColor);
-			shaderCube.setUniform("lightSource.specular", pointLightColor);
-			shaderCube.setUniform("lightSource.constant", 1.0f);
-			shaderCube.setUniform("lightSource.linear", 0.09f);
-			shaderCube.setUniform("lightSource.quadratic", 0.032f);
-
-			shaderCube.setUniform("material.diffuse", 0);
-			shaderCube.setUniform("material.specular", 1);
 			shaderCube.setUniform("material.shininess", cubes[i].shininess);
+
 			//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-6.0f, 3.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.25f, 6.0f, 0.25));
+		shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+
+		shaderCube.setUniform("material.shininess", 255.0f);
+
+		shaderCube.setUniform("material.diffuse", 2);
+		shaderCube.setUniform("material.specular", 2);
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-5.75f, 5.875f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25));
+		shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+
+		shaderCube.setUniform("material.shininess", 255.0f);
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
 		shaderLightSource.use();
 
-		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::mat4(1.0f);
 		model = glm::translate(model, pointLightPosition);
 		model = glm::scale(model, glm::vec3(0.2f));
 
