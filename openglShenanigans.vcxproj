@@ -165,6 +165,7 @@
   <ItemGroup>
     <Image Include="Textures\brickWall.jpg" />
     <Image Include="Textures\container2.png" />
+    <Image Include="Textures\container2specAlt.png" />
     <Image Include="Textures\container2_specular.png" />
     <Image Include="Textures\knight.jpg" />
   </ItemGroup>

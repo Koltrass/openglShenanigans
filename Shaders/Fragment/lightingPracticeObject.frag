@@ -8,6 +8,7 @@ struct Material
 };
 struct LightSource
 {
+	vec3 direction;
 	vec3 position;
 	
 	vec3 ambient;
@@ -30,14 +31,14 @@ void main()
 	vec3 ambient = lightSource.ambient * vec3(texture(material.diffuse, texCoords));
 
 	vec3 norm = normalize(normal);
-	vec3 objectToLight = normalize(lightSource.position - worldPos);
+	vec3 objectToLight = normalize(-lightSource.direction);
 	float diffuseCoef = max(dot(norm, objectToLight), 0.0);
 	vec3 diffuse = diffuseCoef * lightSource.diffuse * vec3(texture(material.diffuse, texCoords));
 
 	vec3 viewDir = normalize(viewPos - worldPos);
 	vec3 reflectDir = reflect(-objectToLight, norm);
 	float specCoef = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-	vec3 specular = specCoef * lightSource.specular * vec3(texture(material.specular, texCoords));
+	vec3 specular = specCoef * lightSource.specular * (vec3(texture(material.specular, texCoords)));
 
 	vec3 result = ambient+diffuse+specular;
 	finalColor = vec4(result, 1.0);
