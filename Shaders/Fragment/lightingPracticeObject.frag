@@ -3,7 +3,6 @@ struct Material
 {
 	sampler2D diffuse;
 	sampler2D specular;
-	sampler2D emission;
 
 	float shininess;
 };
@@ -47,8 +46,6 @@ void main()
 	float specCoef = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 	vec3 specular = specCoef * lightSource.specular * (vec3(texture(material.specular, texCoords)));
 
-	vec3 emitting = vec3(texture(material.emission, texCoords));
-
 	float theta = dot(-lightSource.direction, objectToLight);
 	float epsilon = lightSource.cutoff - lightSource.outerCutoff;
 	float intensity = clamp((theta-lightSource.outerCutoff)/epsilon, 0.0, 1.0);
@@ -62,6 +59,6 @@ void main()
 	specular *= attenuation;
 
 
-	vec3 result = (ambient+diffuse+specular + emitting);
+	vec3 result = (ambient+diffuse+specular);
 	finalColor = vec4(result, 1.0);
 }

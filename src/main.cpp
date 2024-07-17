@@ -182,7 +182,6 @@ int main()
 
 	unsigned int textureContainerDiffuse = loadTexture("Textures/container2.png");
 	unsigned int textureContainerSpecular = loadTexture("Textures/container2_specular.png");
-	unsigned int textureContainerEmission = loadTexture("Textures/container2_emitting.png");
 	unsigned int textureLampPost = loadTexture("Textures/lampPost_diffuse.png");
 
 	glBindVertexArray(0);
@@ -221,8 +220,6 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, textureContainerDiffuse);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, textureContainerSpecular);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, textureContainerEmission);
 
 		shaderCube.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
 		shaderCube.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
@@ -242,7 +239,6 @@ int main()
 
 		shaderCube.setUniform("material.diffuse", 0);
 		shaderCube.setUniform("material.specular", 1);
-		shaderCube.setUniform("material.emission", 2);
 
 		for (size_t i = 0; i < sizeof(cubes) / sizeof(Cube); i++)
 		{

@@ -91,11 +91,5 @@
     <Image Include="Textures\container2specAlt.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Textures\lampPost_diffuse.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Textures\container2_emitting.png">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>
