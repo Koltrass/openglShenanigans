@@ -101,7 +101,7 @@ int main()
 	};
 	Cube cubes[] =
 	{
-		{ { -2.0f,  5.0f, 0.0f }, 1.0f, 2048.0f},
+		{ { -2.0f,  5.0f, 0.0f }, 1.0f, 2048.0f },
 		{ { -2.0f,  3.0f, 0.0f }, 1.0f, 2048.0f },
 		{ { -2.0f,  1.0f, 0.0f }, 1.0f, 2048.0f },
 		{ {  0.0f,  3.0f, 0.0f }, 1.0f, 2048.0f },
@@ -235,7 +235,7 @@ int main()
 
 		processInput(window);
 
-		glClearColor(directionLightColor.r, directionLightColor.g, directionLightColor.b, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -253,7 +253,7 @@ int main()
 		shaderCube.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
 		shaderCube.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
-		shaderCube.setUniform("lightSource.direction", directionLightDirection);
+		shaderCube.setUniform("lightSource.position",pointLightPosition);
 		shaderCube.setUniform("viewPos", camera.getPosition());
 
 		for (size_t i = 0; i < sizeof(cubes) / sizeof(Cube); i++)
@@ -267,6 +267,9 @@ int main()
 			shaderCube.setUniform("lightSource.ambient", { 0.1f, 0.1f, 0.1f });
 			shaderCube.setUniform("lightSource.diffuse", pointLightColor);
 			shaderCube.setUniform("lightSource.specular", pointLightColor);
+			shaderCube.setUniform("lightSource.constant", 1.0f);
+			shaderCube.setUniform("lightSource.linear", 0.09f);
+			shaderCube.setUniform("lightSource.quadratic", 0.032f);
 
 			shaderCube.setUniform("material.diffuse", 0);
 			shaderCube.setUniform("material.specular", 1);
