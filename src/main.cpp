@@ -51,7 +51,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 void processInput(GLFWwindow* window);
-
+unsigned int loadTexture(const char* path);
 int main()
 {
 	float cube1[] =
@@ -180,69 +180,9 @@ int main()
 	glEnableVertexAttribArray(2);
 
 
-	unsigned int texture0;
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &texture0);
-	glBindTexture(GL_TEXTURE_2D, texture0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	stbi_set_flip_vertically_on_load(true);
-	int texWidth, texHeight, nChannels;
-	unsigned char* data = stbi_load("Textures/container2.png", &texWidth, &texHeight, &nChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture\n";
-	}
-	stbi_image_free(data);
-
-	unsigned int texture1;
-	glActiveTexture(GL_TEXTURE1);
-	glGenTextures(1, &texture1);
-	glBindTexture(GL_TEXTURE_2D, texture1);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	data = stbi_load("Textures/container2_specular.png", &texWidth, &texHeight, &nChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture\n";
-	}
-	stbi_image_free(data);
-
-	unsigned int texture2;
-	glActiveTexture(GL_TEXTURE2);
-	glGenTextures(1, &texture2);
-	glBindTexture(GL_TEXTURE_2D, texture2);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	data = stbi_load("Textures/lampPost_diffuse.png", &texWidth, &texHeight, &nChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture\n";
-	}
-	stbi_image_free(data);
+	unsigned int textureContainerDiffuse = loadTexture("Textures/container2.png");
+	unsigned int textureContainerSpecular = loadTexture("Textures/container2_specular.png");
+	unsigned int textureLampPost = loadTexture("Textures/lampPost_diffuse.png");
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -276,6 +216,10 @@ int main()
 		projection = glm::perspective(glm::radians(camera.getZoom()), width / (float)height, 0.1f, 100.0f);
 
 		shaderCube.use();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureContainerDiffuse);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, textureContainerSpecular);
 
 		shaderCube.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
 		shaderCube.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
@@ -309,6 +253,8 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureLampPost);
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-6.0f, 3.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.25f, 6.0f, 0.25));
@@ -316,8 +262,8 @@ int main()
 
 		shaderCube.setUniform("material.shininess", 255.0f);
 
-		shaderCube.setUniform("material.diffuse", 2);
-		shaderCube.setUniform("material.specular", 2);
+		shaderCube.setUniform("material.diffuse", 0);
+		shaderCube.setUniform("material.specular", 0);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -487,4 +433,35 @@ void processInput(GLFWwindow* window)
 			camera.processKeyboard(DOWN, deltaTime);
 		}
 	}
+}
+
+unsigned int loadTexture(const char* path)
+{
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	int texWidth, texHeight, nChannels;
+	unsigned char* data = stbi_load(path, &texWidth, &texHeight, &nChannels, 0);
+	if (data)
+	{
+		GLenum format = GL_RED;
+		if (nChannels == 1)
+			format = GL_RED;
+		else if (nChannels == 3)
+			format = GL_RGB;
+		else if (nChannels == 4)
+			format = GL_RGBA;
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
+	else
+	{
+		std::cout << "Failed to load texture\n";
+	}
+	stbi_image_free(data);
+	return texture;
 }
