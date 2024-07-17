@@ -44,7 +44,8 @@ glm::vec3 directionLightDirection = glm::vec3(0.0f, -1.0f, 0.2f);
 glm::vec3 spotlightPosition = glm::vec3(-5.75f, 5.75f, 0.0f);
 glm::vec3 spotlightDirection = glm::vec3(0.5f, -1.0f, 0.0f);
 glm::vec3 spotlightStrength = glm::vec3(1.0f, 0.045f, 0.0075f);
-float spotlightCutoff = 100.0f;
+float spotlightCutoff = 30.0f;
+float outerCutoff = 45.0f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
@@ -283,7 +284,8 @@ int main()
 
 		shaderCube.setUniform("lightSource.position", spotlightPosition);
 		shaderCube.setUniform("lightSource.direction", spotlightDirection);
-		shaderCube.setUniform("lightSource.cutoff", (float)cos(spotlightCutoff));
+		shaderCube.setUniform("lightSource.cutoff", (float)cos(glm::radians(spotlightCutoff)));
+		shaderCube.setUniform("lightSource.outerCutoff", (float)cos(glm::radians(outerCutoff)));
 		shaderCube.setUniform("lightSource.ambient", { 0.1f, 0.1f, 0.1f });
 		shaderCube.setUniform("lightSource.diffuse", pointLightColor);
 		shaderCube.setUniform("lightSource.specular", pointLightColor);
