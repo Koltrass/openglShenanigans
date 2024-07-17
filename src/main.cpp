@@ -36,13 +36,15 @@ bool firstMouse = true;
 
 glm::vec3 pointLightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 glm::vec3 pointLightPosition = glm::vec3(0.0f, 9.0f, -3.0f);
+glm::vec3 pointStrength = glm::vec3(1.0f, 0.09f, 0.032f);
 
 glm::vec3 directionLightColor = pointLightColor;
 glm::vec3 directionLightDirection = glm::vec3(0.0f, -1.0f, 0.2f);
 
 glm::vec3 spotlightPosition = glm::vec3(-5.75f, 5.75f, 0.0f);
-glm::vec3 spotlightDirection = glm::vec3(1.0f, -0.3f, 0.0f);
-float spotlightCutoff = 50.0f;
+glm::vec3 spotlightDirection = glm::vec3(0.5f, -1.0f, 0.0f);
+glm::vec3 spotlightStrength = glm::vec3(1.0f, 0.045f, 0.0075f);
+float spotlightCutoff = 100.0f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
@@ -279,13 +281,15 @@ int main()
 
 		shaderCube.setUniform("viewPos", camera.getPosition());
 
-		shaderCube.setUniform("lightSource.position", pointLightPosition);
+		shaderCube.setUniform("lightSource.position", spotlightPosition);
+		shaderCube.setUniform("lightSource.direction", spotlightDirection);
+		shaderCube.setUniform("lightSource.cutoff", (float)cos(spotlightCutoff));
 		shaderCube.setUniform("lightSource.ambient", { 0.1f, 0.1f, 0.1f });
 		shaderCube.setUniform("lightSource.diffuse", pointLightColor);
 		shaderCube.setUniform("lightSource.specular", pointLightColor);
-		shaderCube.setUniform("lightSource.constant", 1.0f);
-		shaderCube.setUniform("lightSource.linear", 0.09f);
-		shaderCube.setUniform("lightSource.quadratic", 0.032f);
+		shaderCube.setUniform("lightSource.constant", spotlightStrength.x);
+		shaderCube.setUniform("lightSource.linear", spotlightStrength.y);
+		shaderCube.setUniform("lightSource.quadratic", spotlightStrength.z);
 
 		shaderCube.setUniform("material.diffuse", 0);
 		shaderCube.setUniform("material.specular", 1);
@@ -328,7 +332,7 @@ int main()
 		shaderLightSource.use();
 
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, pointLightPosition);
+		model = glm::translate(model, spotlightPosition);
 		model = glm::scale(model, glm::vec3(0.2f));
 
 		shaderLightSource.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
