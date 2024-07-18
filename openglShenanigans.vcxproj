@@ -137,6 +137,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DirectionLight.cpp" />
+    <ClCompile Include="src\ILightsource.cpp" />
+    <ClCompile Include="src\PointLight.cpp" />
     <ClCompile Include="src\Spotlight.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\glad.c" />
@@ -144,6 +147,8 @@
     <ClCompile Include="src\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\DirectionLight.h" />
+    <ClInclude Include="src\PointLight.h" />
     <ClInclude Include="src\Spotlight.h" />
     <ClInclude Include="src\ILightsource.h" />
     <ClInclude Include="src\Camera.h" />

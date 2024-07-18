@@ -1,8 +1,10 @@
 #pragma once
 #include "glm/glm.hpp"
-class ILightsource
+struct ILightsource
 {
-	glm::vec3 intensityCoefs;
+public:
 	glm::vec3 color;
-	virtual glm::vec3 getVector() = 0;
+
+	ILightsource(glm::vec3 color);
+	virtual glm::vec3 getDirectionVector(glm::vec3 viewPosition) = 0;
 };

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -13,6 +14,9 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Cube.h"
+#include "Spotlight.h"
+#include "PointLight.h"
+#include "DirectionLight.h"
 
 #define FULLSCREEN 0
 
@@ -34,18 +38,22 @@ float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 bool firstMouse = true;
 
-glm::vec3 pointLightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-glm::vec3 pointLightPosition = glm::vec3(0.0f, 9.0f, -3.0f);
-glm::vec3 pointStrength = glm::vec3(1.0f, 0.09f, 0.032f);
+std::vector<ILightsource*> lightsources;
 
-glm::vec3 directionLightColor = pointLightColor;
-glm::vec3 directionLightDirection = glm::vec3(0.0f, -1.0f, 0.2f);
+PointLight pointLight(glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(0.0f, 9.0f, -3.0f),
+	glm::vec3(1.0f, 0.09f, 0.032f));
 
-glm::vec3 spotlightPosition = glm::vec3(-5.75f, 5.75f, 0.0f);
-glm::vec3 spotlightDirection = glm::vec3(0.5f, -1.0f, 0.0f);
-glm::vec3 spotlightStrength = glm::vec3(1.0f, 0.045f, 0.0075f);
-float spotlightCutoff = 30.0f;
-float outerCutoff = 45.0f;
+PointLight pointLight2(glm::vec3(1.0f, 0.0f, 1.0f),
+	glm::vec3(3.0f, 6.0f, -3.0f),
+	glm::vec3(1.0f, 0.09f, 0.032f));
+
+DirectionLight directionLight(glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(0.0f, -1.0f, 0.2f));
+
+Spotlight spotlight(glm::vec3(1.0f, 1.0f, 1.0f),
+	glm::vec3(-5.75f, 5.75f, 0.0f), glm::vec3(0.5f, -1.0f, 0.0f),
+	glm::vec3(1.0f, 0.045f, 0.0075f), 30.0f, 45.0f);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
@@ -54,7 +62,13 @@ void processInput(GLFWwindow* window);
 unsigned int loadTexture(const char* path);
 int main()
 {
+	lightsources.push_back(&directionLight);
+	lightsources.push_back(&spotlight);
+	lightsources.push_back(&pointLight);
+	lightsources.push_back(&pointLight2);
+
 	camera.lookAlongVector(glm::vec3(1.0f, 1.0f, 0.0f));
+
 	float cube1[] =
 	{
 		-0.5f,  0.5f, -0.5f,
@@ -227,16 +241,16 @@ int main()
 
 		shaderCube.setUniform("viewPos", camera.getPosition());
 
-		shaderCube.setUniform("lightSource.position", spotlightPosition);
-		shaderCube.setUniform("lightSource.direction", spotlightDirection);
-		shaderCube.setUniform("lightSource.cutoff", (float)cos(glm::radians(spotlightCutoff)));
-		shaderCube.setUniform("lightSource.outerCutoff", (float)cos(glm::radians(outerCutoff)));
+		shaderCube.setUniform("lightSource.position", spotlight.position);
+		shaderCube.setUniform("lightSource.direction", spotlight.direction);
+		shaderCube.setUniform("lightSource.cutoff", (float)cos(glm::radians(spotlight.innerCutoff)));
+		shaderCube.setUniform("lightSource.outerCutoff", (float)cos(glm::radians(spotlight.outerCutoff)));
 		shaderCube.setUniform("lightSource.ambient", { 0.1f, 0.1f, 0.1f });
-		shaderCube.setUniform("lightSource.diffuse", pointLightColor);
-		shaderCube.setUniform("lightSource.specular", pointLightColor);
-		shaderCube.setUniform("lightSource.constant", spotlightStrength.x);
-		shaderCube.setUniform("lightSource.linear", spotlightStrength.y);
-		shaderCube.setUniform("lightSource.quadratic", spotlightStrength.z);
+		shaderCube.setUniform("lightSource.diffuse", spotlight.color);
+		shaderCube.setUniform("lightSource.specular", spotlight.color);
+		shaderCube.setUniform("lightSource.constant", spotlight.intensityCoefs.x);
+		shaderCube.setUniform("lightSource.linear", spotlight.intensityCoefs.y);
+		shaderCube.setUniform("lightSource.quadratic", spotlight.intensityCoefs.z);
 
 		shaderCube.setUniform("material.diffuse", 0);
 		shaderCube.setUniform("material.specular", 1);
@@ -281,14 +295,14 @@ int main()
 		shaderLightSource.use();
 
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, spotlightPosition);
+		model = glm::translate(model, spotlight.position);
 		model = glm::scale(model, glm::vec3(0.2f));
 
 		shaderLightSource.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 		shaderLightSource.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
 		shaderLightSource.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
-		shaderLightSource.setUniform("lightColor", pointLightColor);
+		shaderLightSource.setUniform("lightColor", spotlight.color);
 
 		//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -345,66 +359,66 @@ void processInput(GLFWwindow* window)
 	{
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
-			pointLightPosition.z -= deltaTime * 4.0f;
+			pointLight.position.z -= deltaTime * 4.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
-			pointLightPosition.z += deltaTime * 4.0f;
+			pointLight.position.z += deltaTime * 4.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
-			pointLightPosition.x -= deltaTime * 4.0f;
+			pointLight.position.x -= deltaTime * 4.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
-			pointLightPosition.x += deltaTime * 4.0f;
+			pointLight.position.x += deltaTime * 4.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		{
-			pointLightPosition.y += deltaTime * 4.0f;
+			pointLight.position.y += deltaTime * 4.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 		{
-			pointLightPosition.y -= deltaTime * 4.0f;
+			pointLight.position.y -= deltaTime * 4.0f;
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
 		{
-			pointLightColor.r += deltaTime * 1.0f;
-			if (pointLightColor.r > 1.0f)
-				pointLightColor.r = 1.0f;
+			pointLight.color.r += deltaTime * 1.0f;
+			if (pointLight.color.r > 1.0f)
+				pointLight.color.r = 1.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
 		{
-			pointLightColor.r -= deltaTime * 1.0f;
-			if (pointLightColor.r < 0.0f)
-				pointLightColor.r = 0.0f;
+			pointLight.color.r -= deltaTime * 1.0f;
+			if (pointLight.color.r < 0.0f)
+				pointLight.color.r = 0.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
 		{
-			pointLightColor.g += deltaTime * 1.0f;
-			if (pointLightColor.g > 1.0f)
-				pointLightColor.g = 1.0f;
+			pointLight.color.g += deltaTime * 1.0f;
+			if (pointLight.color.g > 1.0f)
+				pointLight.color.g = 1.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
 		{
-			pointLightColor.g -= deltaTime * 1.0f;
-			if (pointLightColor.g < 0.0f)
-				pointLightColor.g = 0.0f;
+			pointLight.color.g -= deltaTime * 1.0f;
+			if (pointLight.color.g < 0.0f)
+				pointLight.color.g = 0.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
 		{
-			pointLightColor.b += deltaTime * 1.0f;
-			if (pointLightColor.b > 1.0f)
-				pointLightColor.b = 1.0f;
+			pointLight.color.b += deltaTime * 1.0f;
+			if (pointLight.color.b > 1.0f)
+				pointLight.color.b = 1.0f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
 		{
-			pointLightColor.b -= deltaTime * 1.0f;
-			if (pointLightColor.b < 0.0f)
-				pointLightColor.b = 0.0f;
+			pointLight.color.b -= deltaTime * 1.0f;
+			if (pointLight.color.b < 0.0f)
+				pointLight.color.b = 0.0f;
 		}
-		directionLightColor = pointLightColor;
+		directionLight.color = pointLight.color;
 		return;
 	}
 	else
