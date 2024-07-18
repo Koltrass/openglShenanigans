@@ -14,7 +14,7 @@
 #include "Camera.h"
 #include "Cube.h"
 
-#define FULLSCREEN 1
+#define FULLSCREEN 0
 
 float mixVal = 0.5f;
 
@@ -54,6 +54,7 @@ void processInput(GLFWwindow* window);
 unsigned int loadTexture(const char* path);
 int main()
 {
+	camera.lookAlongVector(glm::vec3(1.0f, 1.0f, 0.0f));
 	float cube1[] =
 	{
 		-0.5f,  0.5f, -0.5f,

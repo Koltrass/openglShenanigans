@@ -80,6 +80,21 @@ glm::vec3 Camera::getPosition()
 {
 	return m_pos;
 }
+void Camera::lookAlongVector(glm::vec3 vector)
+{
+	updateCameraVectors(vector);
+	return;
+}
+void Camera::updateCameraVectors(glm::vec3 direction)
+{
+	glm::vec3 temp = glm::normalize(glm::vec3(direction.x, 0.0f, direction.z));
+	m_front = glm::normalize(direction);
+	m_yaw = glm::degrees(acos(temp.x)) * ((temp.z < 0.0f) ? -1.0f: 1.0f);
+	m_pitch = glm::degrees(asin(m_front.y));
+
+	m_right = glm::normalize(glm::cross(m_front, m_worldUp));
+	m_up = glm::normalize(glm::cross(m_right, m_front));
+}
 void Camera::updateCameraVectors()
 {
 	m_front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));

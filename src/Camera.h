@@ -40,7 +40,9 @@ public:
 	glm::mat4 getViewMatrix();
 	float getZoom();
 	glm::vec3 getPosition();
+	void lookAlongVector(glm::vec3 vector);
 private:
+	void updateCameraVectors(glm::vec3);
 	void updateCameraVectors();
 };
 
