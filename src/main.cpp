@@ -18,7 +18,7 @@
 #include "PointLight.h"
 #include "DirectionLight.h"
 
-#define FULLSCREEN 0
+#define FULLSCREEN 1
 
 float mixVal = 0.5f;
 
@@ -239,7 +239,7 @@ int main()
 		shaderCube.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
 		shaderCube.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
-		shaderCube.setUniform("viewPos", camera.getPosition());
+		shaderCube.setUniform("viewerPos", camera.getPosition());
 
 		shaderCube.setUniform("lightSource.position", spotlight.position);
 		shaderCube.setUniform("lightSource.direction", spotlight.direction);
