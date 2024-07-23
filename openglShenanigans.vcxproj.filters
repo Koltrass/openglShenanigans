@@ -48,6 +48,9 @@
     <ClCompile Include="src\ILightsource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h">
@@ -74,27 +77,17 @@
     <ClInclude Include="src\DirectionLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Vertex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\Fragment\fragment1.frag">
-      <Filter>Resource Files\Shaders\Fragment</Filter>
-    </None>
-    <None Include="Shaders\Fragment\fragment2.frag">
-      <Filter>Resource Files\Shaders\Fragment</Filter>
-    </None>
-    <None Include="Shaders\Vertex\vertex1.vert">
-      <Filter>Resource Files\Shaders\Vertex</Filter>
-    </None>
-    <None Include="Shaders\Fragment\fragment3.frag">
-      <Filter>Resource Files\Shaders\Fragment</Filter>
-    </None>
-    <None Include="Shaders\Vertex\vertex2.vert">
-      <Filter>Resource Files\Shaders\Vertex</Filter>
-    </None>
-    <None Include="Shaders\Vertex\vertexBasic.vert" />
-    <None Include="Shaders\Fragment\fragmentBasic.frag" />
-    <None Include="Shaders\Vertex\textured.vert" />
-    <None Include="Shaders\Fragment\textured.frag" />
     <None Include="Shaders\Fragment\lightingPracticeObject.frag" />
     <None Include="Shaders\Vertex\lightingPracticeObject.vert" />
     <None Include="Shaders\Fragment\lightingPracticeSource.frag" />
