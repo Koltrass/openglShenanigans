@@ -1,13 +1,9 @@
 #include "Camera.h"
-Camera::Camera(glm::vec3 pos, glm::vec3 up, float yaw, float pitch)
+Camera::Camera(glm::vec3 pos, glm::vec3 up, float yaw, float pitch) : position(pos), worldUp(up), yaw(yaw), pitch(pitch)
 {
-	m_pos = pos;
-	m_worldUp = up;
-	m_yaw = yaw;
-	m_pitch = pitch;
-	m_movementSpeed = 4.0f;
-	m_mouseSensitivity = 0.15f;
-	m_zoom = 45.0f;
+	movementSpeed = 4.0f;
+	mouseSensitivity = 0.15f;
+	zoom = 45.0f;
 	updateCameraVectors();
 }
 Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Camera(glm::vec3(posX, posY, posZ), glm::vec3(upX, upY, upZ), yaw, pitch) {}
@@ -15,74 +11,74 @@ Camera::Camera() : Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0
 
 void Camera::processKeyboard(direction direction, float deltaTime)
 {
-	float velocity = m_movementSpeed * deltaTime;
+	float velocity = movementSpeed * deltaTime;
 	switch (direction)
 	{
 		case FORWARD:
 		{
-			m_pos += velocity * m_front;
+			position += velocity * front;
 			break;
 		}
 		case BACKWARD:
 		{
-			m_pos -= velocity * m_front;
+			position -= velocity * front;
 			break;
 		}
 		case RIGHT:
 		{
-			m_pos += velocity * m_right;
+			position += velocity * right;
 			break;
 		}
 		case LEFT:
 		{
-			m_pos -= velocity * m_right;
+			position -= velocity * right;
 			break;
 		}
 		case UP:
 		{
-			m_pos.y += velocity;
+			position.y += velocity;
 			break;
 		}
 		case DOWN:
 		{
-			m_pos.y -= velocity;
+			position.y -= velocity;
 			break;
 		}
 	}
 }
 void Camera::processMouseMovement(float xOffset, float yOffset, bool constrainPitch)
 {
-	m_yaw += xOffset * m_mouseSensitivity;
-	m_pitch += yOffset * m_mouseSensitivity;
-	if (m_pitch > 89.9f)
-		m_pitch = 89.9f;
-	else if (m_pitch < -89.9f)
-		m_pitch = -89.9f;
+	yaw += xOffset * mouseSensitivity;
+	pitch += yOffset * mouseSensitivity;
+	if (pitch > 89.9f)
+		pitch = 89.9f;
+	else if (pitch < -89.9f)
+		pitch = -89.9f;
 	updateCameraVectors();
 }
 void Camera::processMouseScroll(float yOffset)
 {
-	m_zoom -= yOffset;
-	if (m_zoom < 1.0f)
-		m_zoom = 1.0f;
-	else if (m_zoom > 45.0f)
-		m_zoom = 45.0f;
+	zoom -= yOffset;
+	if (zoom < 1.0f)
+		zoom = 1.0f;
+	else if (zoom > 45.0f)
+		zoom = 45.0f;
 }
 glm::mat4 Camera::getViewMatrix()
 {
-	return glm::lookAt(m_pos, m_pos + m_front, m_up);
+	return glm::lookAt(position, position + front, up);
 }
 float Camera::getZoom()
 {
-	return m_zoom;
+	return zoom;
 }
 glm::vec3 Camera::getPosition()
 {
-	return m_pos;
+	return position;
 }
 glm::vec3 Camera::getDirection()
 {
-	return m_front;
+	return front;
 }
 void Camera::lookAlongVector(glm::vec3 vector)
 {
@@ -94,29 +90,29 @@ void Camera::updateCameraVectors(glm::vec3 direction)
 	glm::vec3 temp = glm::normalize(glm::vec3(direction.x, 0.0f, direction.z));
 	if (direction.x != 0.0f || direction.z != 0.0f)
 	{
-		m_front = glm::normalize(direction);
-		m_yaw = glm::degrees(acos(temp.x)) * ((temp.z < 0.0f) ? -1.0f : 1.0f);
-		m_pitch = glm::degrees(asin(m_front.y));
-		m_right = glm::normalize(glm::cross(m_front, m_worldUp));
-		m_up = glm::normalize(glm::cross(m_right, m_front));
+		front = glm::normalize(direction);
+		yaw = glm::degrees(acos(temp.x)) * ((temp.z < 0.0f) ? -1.0f : 1.0f);
+		pitch = glm::degrees(asin(front.y));
+		right = glm::normalize(glm::cross(front, worldUp));
+		up = glm::normalize(glm::cross(right, front));
 	}
 	else
 	{
-		m_pitch = glm::degrees(asin(normalize(direction).y));
-		if (m_pitch > 89.9f)
-			m_pitch = 89.9f;
-		else if (m_pitch < -89.9f)
-			m_pitch = -89.9f;
+		pitch = glm::degrees(asin(normalize(direction).y));
+		if (pitch > 89.9f)
+			pitch = 89.9f;
+		else if (pitch < -89.9f)
+			pitch = -89.9f;
 		updateCameraVectors();
 	}
 }
 void Camera::updateCameraVectors()
 {
-	m_front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	m_front.y = sin(glm::radians(m_pitch));
-	m_front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	m_front = glm::normalize(m_front);
+	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front = glm::normalize(front);
 
-	m_right = glm::normalize(glm::cross(m_front, m_worldUp));
-	m_up = glm::normalize(glm::cross(m_right, m_front));
+	right = glm::normalize(glm::cross(front, worldUp));
+	up = glm::normalize(glm::cross(right, front));
 }

@@ -16,18 +16,18 @@ enum direction
 class Camera
 {
 private:
-	glm::vec3 m_pos;
-	glm::vec3 m_front;
-	glm::vec3 m_up;
-	glm::vec3 m_right;
-	glm::vec3 m_worldUp;
+	glm::vec3 position;
+	glm::vec3 front;
+	glm::vec3 up;
+	glm::vec3 right;
+	glm::vec3 worldUp;
 
-	float m_yaw;
-	float m_pitch;
+	float yaw;
+	float pitch;
 
-	float m_movementSpeed;
-	float m_mouseSensitivity;
-	float m_zoom;
+	float movementSpeed;
+	float mouseSensitivity;
+	float zoom;
 public:
 	Camera(glm::vec3 pos, glm::vec3 up, float yaw, float pitch);
 	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
