@@ -10,7 +10,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 #include "Shader.h"
 #include "Camera.h"
@@ -18,7 +17,8 @@
 #include "Spotlight.h"
 #include "PointLight.h"
 #include "DirectionLight.h"
-
+#include "TextureLoader.h"
+#include "Model.h"
 #define FULLSCREEN 1
 
 float mixVal = 0.5f;
@@ -52,7 +52,6 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void processInput(GLFWwindow* window);
-unsigned int loadTexture(const char* path);
 int main()
 {
 	spotlights.push_back(std::make_unique<Spotlight>
@@ -201,9 +200,9 @@ int main()
 	glEnableVertexAttribArray(2);
 
 
-	unsigned int textureContainerDiffuse = loadTexture("Textures/container2.png");
-	unsigned int textureContainerSpecular = loadTexture("Textures/container2_specular.png");
-	unsigned int textureLampPost = loadTexture("Textures/lampPost_diffuse.png");
+	unsigned int textureContainerDiffuse = TextureLoader::loadTexture("Textures/container2.png");
+	unsigned int textureContainerSpecular = TextureLoader::loadTexture("Textures/container2_specular.png");
+	unsigned int textureLampPost = TextureLoader::loadTexture("Textures/lampPost_diffuse.png");
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -212,6 +211,9 @@ int main()
 
 	Shader shaderCube("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/lightingPracticeObject.frag");
 	Shader shaderLightSource("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/lightingPracticeSource.frag");
+	Shader modelTest("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/modelLearning.frag");
+
+	Model backpack("Assets/Models/backpack/backpack.obj");
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -227,7 +229,6 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glBindVertexArray(VAO1);
 
 		glm::mat4 view = glm::mat4(1.0f);
 		view = camera.getViewMatrix();
@@ -235,6 +236,54 @@ int main()
 		glm::mat4 projection = glm::mat4(1.0f);
 		//projection = glm::ortho(-(float)width/height, (float)width/height, -1.0f, 1.0f, 0.1f, 100.0f);
 		projection = glm::perspective(glm::radians(camera.getZoom()), width / (float)height, 0.1f, 100.0f);
+		
+		
+
+		//
+		modelTest.use();
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+		shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+
+		modelTest.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
+		modelTest.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+		modelTest.setUniform("viewerPos", camera.getPosition());
+
+		modelTest.setUniform("directionLight.direction", directionLight.direction);
+		modelTest.setUniform("directionLight.ambient", directionLight.color);
+		modelTest.setUniform("directionLight.diffuse", directionLight.color);
+		modelTest.setUniform("directionLight.specular", directionLight.color);
+
+		for (size_t i = 0; i < spotlights.size(); i++)
+		{
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].position", spotlights[i]->position);
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].direction", spotlights[i]->direction);
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].innerCutoff", (float)cos(glm::radians(spotlights[i]->innerCutoff)));
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].outerCutoff", (float)cos(glm::radians(spotlights[i]->outerCutoff)));
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].ambient", spotlights[i]->color / 10.0f);
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].diffuse", spotlights[i]->color);
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].specular", spotlights[i]->color);
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].constant", spotlights[i]->intensityCoefs.x);
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].linear", spotlights[i]->intensityCoefs.y);
+			modelTest.setUniform("spotlights[" + std::to_string(i) + "].quadratic", spotlights[i]->intensityCoefs.z);
+		}
+		for (size_t i = 0; i < pointLights.size(); i++)
+		{
+			modelTest.setUniform("pointLights[" + std::to_string(i) + "].position", pointLights[i]->position);
+			modelTest.setUniform("pointLights[" + std::to_string(i) + "].ambient", pointLights[i]->color);
+			modelTest.setUniform("pointLights[" + std::to_string(i) + "].diffuse", pointLights[i]->color);
+			modelTest.setUniform("pointLights[" + std::to_string(i) + "].specular", pointLights[i]->color);
+			modelTest.setUniform("pointLights[" + std::to_string(i) + "].constant", pointLights[i]->intensityCoefs.x);
+			modelTest.setUniform("pointLights[" + std::to_string(i) + "].linear", pointLights[i]->intensityCoefs.y);
+			modelTest.setUniform("pointLights[" + std::to_string(i) + "].quadratic", pointLights[i]->intensityCoefs.z);
+		}
+
+		backpack.Draw(modelTest);
+		//
+
+		glBindVertexArray(VAO1);
 
 		shaderCube.use();
 		glActiveTexture(GL_TEXTURE0);
@@ -293,7 +342,7 @@ int main()
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureLampPost);
-		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-6.0f, 3.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.25f, 6.0f, 0.25));
 		shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
@@ -369,19 +418,19 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos)
 {
 	if (firstMouse == true)
 	{
-		lastX = xPos;
-		lastY = yPos;
+		lastX = static_cast<float>(xPos);
+		lastY = static_cast<float>(yPos);
 		firstMouse = false;
 	}
 	float xOffset = (float)xPos - lastX;
 	float yOffset = lastY - (float)yPos;
-	lastX = xPos;
-	lastY = yPos;
+	lastX = static_cast<float>(xPos);
+	lastY = static_cast<float>(yPos);
 	camera.processMouseMovement(xOffset, yOffset, true);
 }
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 {
-	camera.processMouseScroll(yOffset);
+	camera.processMouseScroll(static_cast<float>(yOffset));
 }
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -404,13 +453,13 @@ void processInput(GLFWwindow* window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		mixVal += 0.001;
+		mixVal += 0.001f;
 		if (mixVal > 1.0f)
 			mixVal = 1.0f;
 	}
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		mixVal -= 0.001;
+		mixVal -= 0.001f;
 		if (mixVal < 0.0f)
 			mixVal = 0.0f;
 	}
@@ -506,35 +555,4 @@ void processInput(GLFWwindow* window)
 			camera.processKeyboard(DOWN, deltaTime);
 		}
 	}
-}
-
-unsigned int loadTexture(const char* path)
-{
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	int texWidth, texHeight, nChannels;
-	unsigned char* data = stbi_load(path, &texWidth, &texHeight, &nChannels, 0);
-	if (data)
-	{
-		GLenum format = GL_RED;
-		if (nChannels == 1)
-			format = GL_RED;
-		else if (nChannels == 3)
-			format = GL_RGB;
-		else if (nChannels == 4)
-			format = GL_RGBA;
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	}
-	else
-	{
-		std::cout << "Failed to load texture\n";
-	}
-	stbi_image_free(data);
-	return texture;
 }

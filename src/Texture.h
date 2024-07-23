@@ -9,4 +9,5 @@ struct Texture
 {
 	unsigned int id;
 	TextureType type;
+	std::string path;
 };
