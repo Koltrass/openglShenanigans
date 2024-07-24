@@ -2,6 +2,7 @@
 
 unsigned int TextureLoader::loadTexture(const char* path)
 {
+	stbi_set_flip_vertically_on_load(1);
 	unsigned int texture;
 	glGenTextures(1, &texture);
 	int texWidth, texHeight, nChannels;
