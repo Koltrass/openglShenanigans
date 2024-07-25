@@ -52,6 +52,8 @@ void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void processInput(GLFWwindow* window);
+void setLightingUniforms(Shader& shader, DirectionLight& direction, std::vector<std::unique_ptr<Spotlight>>& spotLights,
+	std::vector<std::unique_ptr<PointLight>>& pointLights, float shininess);
 int main()
 {
 	spotlights.push_back(std::make_unique<Spotlight>
@@ -197,27 +199,23 @@ int main()
 		float currentFrame = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-
+		////
 		processInput(window);
-
+		////
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
+		////
 		glm::mat4 view = glm::mat4(1.0f);
 		view = camera.getViewMatrix();
 
 		glm::mat4 projection = glm::mat4(1.0f);
 		//projection = glm::ortho(-(float)width/height, (float)width/height, -1.0f, 1.0f, 0.1f, 100.0f);
 		projection = glm::perspective(glm::radians(camera.getZoom()), width / (float)height, 0.1f, 100.0f);
-		
-		
-
-		//
+		////  backpack model
 		modelTest.use();
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-1.0f, 2.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(-1.0f, 4.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 		modelTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 
@@ -226,81 +224,12 @@ int main()
 
 		modelTest.setUniform("viewerPos", camera.getPosition());
 
-		modelTest.setUniform("material.shininess", 255.0f);
-
-		modelTest.setUniform("directionLight.direction", directionLight.direction);
-		modelTest.setUniform("directionLight.ambient", directionLight.color);
-		modelTest.setUniform("directionLight.diffuse", directionLight.color);
-		modelTest.setUniform("directionLight.specular", directionLight.color);
-
-		for (size_t i = 0; i < spotlights.size(); i++)
-		{
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].position", spotlights[i]->position);
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].direction", spotlights[i]->direction);
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].innerCutoff", (float)cos(glm::radians(spotlights[i]->innerCutoff)));
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].outerCutoff", (float)cos(glm::radians(spotlights[i]->outerCutoff)));
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].ambient", spotlights[i]->color / 10.0f);
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].diffuse", spotlights[i]->color);
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].specular", spotlights[i]->color);
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].constant", spotlights[i]->intensityCoefs.x);
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].linear", spotlights[i]->intensityCoefs.y);
-			modelTest.setUniform("spotlights[" + std::to_string(i) + "].quadratic", spotlights[i]->intensityCoefs.z);
-		}
-		for (size_t i = 0; i < pointLights.size(); i++)
-		{
-			modelTest.setUniform("pointLights[" + std::to_string(i) + "].position", pointLights[i]->position);
-			modelTest.setUniform("pointLights[" + std::to_string(i) + "].ambient", pointLights[i]->color);
-			modelTest.setUniform("pointLights[" + std::to_string(i) + "].diffuse", pointLights[i]->color);
-			modelTest.setUniform("pointLights[" + std::to_string(i) + "].specular", pointLights[i]->color);
-			modelTest.setUniform("pointLights[" + std::to_string(i) + "].constant", pointLights[i]->intensityCoefs.x);
-			modelTest.setUniform("pointLights[" + std::to_string(i) + "].linear", pointLights[i]->intensityCoefs.y);
-			modelTest.setUniform("pointLights[" + std::to_string(i) + "].quadratic", pointLights[i]->intensityCoefs.z);
-		}
+		setLightingUniforms(modelTest, directionLight, spotlights, pointLights, 32.0f);
 
 		backpack.Draw(modelTest);
-		//
-
+		////
 		glBindVertexArray(VAO1);
-
-		//
-		shaderCube.use();
-
-		shaderCube.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
-		shaderCube.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
-
-		shaderCube.setUniform("viewerPos", camera.getPosition());
-
-		shaderCube.setUniform("material.shininess", 255.0f);
-
-		shaderCube.setUniform("directionLight.direction", directionLight.direction);
-		shaderCube.setUniform("directionLight.ambient", directionLight.color);
-		shaderCube.setUniform("directionLight.diffuse", directionLight.color);
-		shaderCube.setUniform("directionLight.specular", directionLight.color);
-
-		for (size_t i = 0; i < spotlights.size(); i++)
-		{
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].position", spotlights[i]->position);
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].direction", spotlights[i]->direction);
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].innerCutoff", (float)cos(glm::radians(spotlights[i]->innerCutoff)));
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].outerCutoff", (float)cos(glm::radians(spotlights[i]->outerCutoff)));
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].ambient", spotlights[i]->color / 10.0f);
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].diffuse", spotlights[i]->color);
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].specular", spotlights[i]->color);
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].constant", spotlights[i]->intensityCoefs.x);
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].linear", spotlights[i]->intensityCoefs.y);
-			shaderCube.setUniform("spotlights[" + std::to_string(i) + "].quadratic", spotlights[i]->intensityCoefs.z);
-		}
-		for (size_t i = 0; i < pointLights.size(); i++)
-		{
-			shaderCube.setUniform("pointLights[" + std::to_string(i) + "].position", pointLights[i]->position);
-			shaderCube.setUniform("pointLights[" + std::to_string(i) + "].ambient", pointLights[i]->color);
-			shaderCube.setUniform("pointLights[" + std::to_string(i) + "].diffuse", pointLights[i]->color);
-			shaderCube.setUniform("pointLights[" + std::to_string(i) + "].specular", pointLights[i]->color);
-			shaderCube.setUniform("pointLights[" + std::to_string(i) + "].constant", pointLights[i]->intensityCoefs.x);
-			shaderCube.setUniform("pointLights[" + std::to_string(i) + "].linear", pointLights[i]->intensityCoefs.y);
-			shaderCube.setUniform("pointLights[" + std::to_string(i) + "].quadratic", pointLights[i]->intensityCoefs.z);
-		}
-
+		//// floor
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureContainerDiffuse);
 		glActiveTexture(GL_TEXTURE1);
@@ -308,37 +237,37 @@ int main()
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, -50.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(100.0f, 100.0f, 100.0f));
-		shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
-		shaderCube.setUniform("material.shininess", 255.0f);
+		modelTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 
-		shaderCube.setUniform("material.diffuse", 0);
-		shaderCube.setUniform("material.specular", 1);
+		modelTest.setUniform("material.shininess", 255.0f);
+
+		modelTest.setUniform("material.diffuse0", 0);
+		modelTest.setUniform("material.specular0", 1);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//
+		//// lamppost base
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureLampPost);
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-6.0f, 3.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.25f, 6.0f, 0.25));
-		shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+		modelTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 
-		shaderCube.setUniform("material.shininess", 255.0f);
+		modelTest.setUniform("material.shininess", 255.0f);
 
-		shaderCube.setUniform("material.diffuse", 0);
-		shaderCube.setUniform("material.specular", 0);
+		modelTest.setUniform("material.diffuse0", 0);
+		modelTest.setUniform("material.specular0", 0);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//
+		//// lamppost lampplace
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-5.75f, 5.875f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25));
-		shaderCube.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+		modelTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 
-		shaderCube.setUniform("material.shininess", 255.0f);
+		modelTest.setUniform("material.shininess", 255.0f);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//
-
+		//// direction light
 		shaderLightSource.use();
 		shaderLightSource.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
 		shaderLightSource.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
@@ -352,20 +281,8 @@ int main()
 
 		shaderLightSource.setUniform("lightColor", directionLight.color);
 
-		//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		for (size_t i = 0; i < pointLights.size(); i++)
-		{
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, pointLights[i]->position);
-			model = glm::scale(model, glm::vec3(0.2f));
-
-			shaderLightSource.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
-
-			shaderLightSource.setUniform("lightColor", pointLights[i]->color);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		//// all spotlights
 		for (size_t i = 0; i < spotlights.size(); i++)
 		{
 			model = glm::mat4(1.0f);
@@ -377,7 +294,19 @@ int main()
 			shaderLightSource.setUniform("lightColor", spotlights[i]->color);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-		//
+		//// all pointlights
+		for (size_t i = 0; i < pointLights.size(); i++)
+		{
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, pointLights[i]->position);
+			model = glm::scale(model, glm::vec3(0.2f));
+
+			shaderLightSource.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+
+			shaderLightSource.setUniform("lightColor", pointLights[i]->color);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		////
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
@@ -411,14 +340,24 @@ void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) != GLFW_PRESS)
+	{
 		return;
-	else if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
+	}
+	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
 	{
 		if (selectedPointLight == pointLights.size() - 1)
 			selectedPointLight = 0;
 		else
 			selectedPointLight++;
 		camera.lookAlongVector(pointLights[selectedPointLight]->getDirectionVector(camera.getPosition()));
+	}
+	if (key == GLFW_KEY_0 || key == GLFW_KEY_KP_0 && action == GLFW_PRESS)
+	{
+		pointLights[selectedPointLight]->color = glm::vec3(0.0f, 0.0f, 0.0f);
+	}
+	if (key == GLFW_KEY_1 || key == GLFW_KEY_KP_1 && action == GLFW_PRESS)
+	{
+		pointLights[selectedPointLight]->color = glm::vec3(1.0f, 1.0f, 1.0f);
 	}
 }
 void processInput(GLFWwindow* window)
@@ -530,5 +469,41 @@ void processInput(GLFWwindow* window)
 		{
 			camera.processKeyboard(DOWN, deltaTime);
 		}
+	}
+}
+
+void setLightingUniforms(Shader& shader, DirectionLight& direction, std::vector<std::unique_ptr<Spotlight>>& spotlights, std::vector<std::unique_ptr<PointLight>>& pointLights, float shininess)
+{
+	shader.use();
+
+	shader.setUniform("material.shininess", shininess);
+
+	shader.setUniform("directionLight.direction", direction.direction);
+	shader.setUniform("directionLight.ambient", direction.color);
+	shader.setUniform("directionLight.diffuse", direction.color);
+	shader.setUniform("directionLight.specular", direction.color);
+
+	for (size_t i = 0; i < spotlights.size(); i++)
+	{
+		shader.setUniform("spotlights[" + std::to_string(i) + "].position", spotlights[i]->position);
+		shader.setUniform("spotlights[" + std::to_string(i) + "].direction", spotlights[i]->direction);
+		shader.setUniform("spotlights[" + std::to_string(i) + "].innerCutoff", (float)cos(glm::radians(spotlights[i]->innerCutoff)));
+		shader.setUniform("spotlights[" + std::to_string(i) + "].outerCutoff", (float)cos(glm::radians(spotlights[i]->outerCutoff)));
+		shader.setUniform("spotlights[" + std::to_string(i) + "].ambient", spotlights[i]->color / 10.0f);
+		shader.setUniform("spotlights[" + std::to_string(i) + "].diffuse", spotlights[i]->color);
+		shader.setUniform("spotlights[" + std::to_string(i) + "].specular", spotlights[i]->color);
+		shader.setUniform("spotlights[" + std::to_string(i) + "].constant", spotlights[i]->intensityCoefs.x);
+		shader.setUniform("spotlights[" + std::to_string(i) + "].linear", spotlights[i]->intensityCoefs.y);
+		shader.setUniform("spotlights[" + std::to_string(i) + "].quadratic", spotlights[i]->intensityCoefs.z);
+	}
+	for (size_t i = 0; i < pointLights.size(); i++)
+	{
+		shader.setUniform("pointLights[" + std::to_string(i) + "].position", pointLights[i]->position);
+		shader.setUniform("pointLights[" + std::to_string(i) + "].ambient", pointLights[i]->color);
+		shader.setUniform("pointLights[" + std::to_string(i) + "].diffuse", pointLights[i]->color);
+		shader.setUniform("pointLights[" + std::to_string(i) + "].specular", pointLights[i]->color);
+		shader.setUniform("pointLights[" + std::to_string(i) + "].constant", pointLights[i]->intensityCoefs.x);
+		shader.setUniform("pointLights[" + std::to_string(i) + "].linear", pointLights[i]->intensityCoefs.y);
+		shader.setUniform("pointLights[" + std::to_string(i) + "].quadratic", pointLights[i]->intensityCoefs.z);
 	}
 }
