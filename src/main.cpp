@@ -180,6 +180,7 @@ int main()
 	unsigned int textureContainerDiffuse = TextureLoader::loadTexture("Textures/container2.png");
 	unsigned int textureContainerSpecular = TextureLoader::loadTexture("Textures/container2_specular.png");
 	unsigned int textureLampPost = TextureLoader::loadTexture("Textures/lampPost_diffuse.png");
+	unsigned int brickWall = TextureLoader::loadTexture("Textures/brickWall.jpg");
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -266,6 +267,24 @@ int main()
 
 		modelTest.setUniform("material.shininess", 255.0f);
 
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//// two boxes
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, brickWall);
+		modelTest.setUniform("material.diffuse0", 0);
+		modelTest.setUniform("material.specular0", 0);
+		modelTest.setUniform("material.shininess", 2.0f);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 5.0f, -9.0f));
+		model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+		modelTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureContainerDiffuse);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 5.0f, -9.1f));
+		model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+		modelTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		//// direction light
 		shaderLightSource.use();
