@@ -167,6 +167,7 @@
     <ClInclude Include="src\Vertex.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\Fragment\greenOutline.frag" />
     <None Include="Shaders\Fragment\lightingPracticeObject.frag" />
     <None Include="Shaders\Fragment\lightingPracticeSource.frag" />
     <None Include="Shaders\Fragment\modelLearning.frag" />

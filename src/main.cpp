@@ -190,10 +190,10 @@ int main()
 	Shader shaderCube("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/lightingPracticeObject.frag");
 	Shader shaderLightSource("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/lightingPracticeSource.frag");
 	Shader modelTest("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/modelLearning.frag");
+	Shader outlineTest("Shaders/Vertex/lightingPracticeObject.vert", "Shaders/Fragment/greenOutline.frag");
 
 	Model backpack("Assets/Models/backpack/backpack.obj");
 
-	glEnable(GL_DEPTH_TEST);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -204,8 +204,7 @@ int main()
 		processInput(window);
 		////
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		////
 		glm::mat4 view = glm::mat4(1.0f);
 		view = camera.getViewMatrix();
@@ -268,7 +267,13 @@ int main()
 		modelTest.setUniform("material.shininess", 255.0f);
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//// two boxes
+		//// outline test
+		glEnable(GL_STENCIL_TEST);
+		glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, brickWall);
 		modelTest.setUniform("material.diffuse0", 0);
@@ -279,13 +284,22 @@ int main()
 		model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
 		modelTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureContainerDiffuse);
+
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+
+		outlineTest.use();
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 5.0f, -9.1f));
-		model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
-		modelTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+		model = glm::translate(model, glm::vec3(0.0f, 5.0f, -9.0f));
+		model = glm::scale(model, glm::vec3(2.3f, 2.3f, 2.3f));
+		outlineTest.setUniform("model", 1, GL_FALSE, glm::value_ptr(model));
+		outlineTest.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));
+		outlineTest.setUniform("projection", 1, GL_FALSE, glm::value_ptr(projection));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glDisable(GL_STENCIL_TEST);
+		glEnable(GL_DEPTH_TEST);
+		glStencilMask(0xFF);
 		//// direction light
 		shaderLightSource.use();
 		shaderLightSource.setUniform("view", 1, GL_FALSE, glm::value_ptr(view));

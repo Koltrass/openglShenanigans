@@ -104,6 +104,7 @@
     <None Include="Shaders\Vertex\lightingPracticeObject.vert" />
     <None Include="Shaders\Fragment\lightingPracticeSource.frag" />
     <None Include="Shaders\Fragment\modelLearning.frag" />
+    <None Include="Shaders\Fragment\greenOutline.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Textures\knight.jpg">
